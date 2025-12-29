@@ -73,53 +73,53 @@
     <div class="result" id="result"></div>
     <div class="error" id="error"></div>
   </div>
+<script>
+async function predict() {
+  const studyHours = document.getElementById("study_hours").value;
+  const attendance = document.getElementById("attendance").value;
+  const resultDiv = document.getElementById("result");
+  const errorDiv = document.getElementById("error");
 
-  <script>
-  async function predict() {
-    const studyHours = document.getElementById("study_hours").value;
-    const attendance = document.getElementById("attendance").value;
-    const resultDiv = document.getElementById("result");
-    const errorDiv = document.getElementById("error");
+  resultDiv.innerHTML = "";
+  errorDiv.innerHTML = "";
 
-    resultDiv.innerHTML = "";
-    errorDiv.innerHTML = "";
-
-    if (!studyHours || !attendance) {
-      errorDiv.innerHTML = "Please enter both values.";
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/predict/logistic",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            feature1: Number(studyHours),
-            feature2: Number(attendance)
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to get prediction from backend");
-      }
-
-      const data = await response.json();
-
-      resultDiv.innerHTML =
-        data.prediction === 1
-          ? "Prediction: Student will pass ✅"
-          : "Prediction: Student will fail ❌";
-
-    } catch (err) {
-      errorDiv.innerHTML = err.message;
-    }
+  if (!studyHours || !attendance) {
+    errorDiv.innerHTML = "Please enter both values.";
+    return;
   }
+
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8000/predict/logistic",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          study_hours: Number(studyHours),
+          attendance: Number(attendance)
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to get prediction from backend");
+    }
+
+    const data = await response.json();
+
+    resultDiv.innerHTML =
+      data.prediction === 1
+        ? "Prediction: Student will pass ✅"
+        : "Prediction: Student will fail ❌";
+
+  } catch (err) {
+    errorDiv.innerHTML = err.message;
+  }
+}
 </script>
+
 
 
 </body>
