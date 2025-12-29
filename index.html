@@ -4,75 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Performance Predictor</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .container {
-            max-width: 500px;
-            margin-top: 50px;
-            padding: 30px;
-            background-color: #ffffff;
+            background: #fff;
+            padding: 30px 40px;
             border-radius: 10px;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 350px;
         }
         h1 {
-            font-size: 28px;
             margin-bottom: 20px;
-            text-align: center;
-            color: #343a40;
+            color: #333;
         }
-        #result {
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
             margin-top: 20px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 22px;
+            font-size: 1.2em;
+            color: #007bff;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Student Performance Predictor</h1>
-        <form id="predictForm">
-            <div class="mb-3">
-                <label for="study_hours" class="form-label">Study Hours</label>
-                <input type="number" class="form-control" id="study_hours" required>
-            </div>
-            <div class="mb-3">
-                <label for="attendance" class="form-label">Attendance</label>
-                <input type="number" class="form-control" id="attendance" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Predict</button>
-        </form>
-        <h2 id="result"></h2>
-    </div>
 
-    <script>
-        const form = document.getElementById("predictForm");
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const study_hours = document.getElementById("study_hours").value;
-            const attendance = document.getElementById("attendance").value;
+<div class="container">
+    <h1>Student Performance Predictor</h1>
+    <input type="number" id="study_hours" placeholder="Study Hours">
+    <input type="number" id="attendance" placeholder="Attendance">
+    <br>
+    <button onclick="predict()">Predict</button>
+    <div class="result" id="result"></div>
+</div>
 
-            try {
-                const response = await fetch("https://ml-fastapi-backend.onrender.com/predict/logistic", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({study_hours: Number(study_hours), attendance: Number(attendance)})
-                });
+<script>
+    async function predict() {
+        const study_hours = document.getElementById("study_hours").value;
+        const attendance = document.getElementById("attendance").value;
 
-                if (!response.ok) {
-                    throw new Error("Error calling backend API");
-                }
+        if(!study_hours || !attendance) {
+            alert("Please fill in both fields!");
+            return;
+        }
 
-                const data = await response.json();
-                document.getElementById("result").innerText = "Prediction: " + data.prediction;
-            } catch (err) {
-                document.getElementById("result").innerText = "Error: " + err.message;
+        const resultDiv = document.getElementById("result");
+        resultDiv.textContent = "Predicting...";
+
+        try {
+            const response = await fetch("https://ml-fastapi-backend.onrender.com/predict/logistic", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ study_hours: Number(study_hours), attendance: Number(attendance) })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
             }
-        });
-    </script>
+
+            const data = await response.json();
+            resultDiv.textContent = "Prediction: " + data.prediction;
+
+        } catch (error) {
+            console.error(error);
+            resultDiv.textContent = "Failed to fetch prediction.";
+        }
+    }
+</script>
+
 </body>
 </html>
