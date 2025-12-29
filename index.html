@@ -6,122 +6,134 @@
   <title>Student Performance Predictor</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f8f8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
 
     .container {
       background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
       text-align: center;
-      width: 350px;
+      width: 380px;
     }
 
-    h1 {
-      color: #333;
-      margin-bottom: 20px;
-    }
+    h1 { color: #333; margin-bottom: 25px; font-size: 1.5rem; }
+    
+    label { display: block; text-align: left; margin-bottom: 5px; font-weight: bold; color: #555; }
 
-    input {
+    select, input {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0;
+      padding: 12px;
+      margin-bottom: 20px;
       font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
     }
 
     button {
-      padding: 10px 20px;
+      width: 100%;
+      padding: 12px;
       font-size: 16px;
-      background-color: #4caf50;
+      background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
+      transition: background 0.3s;
     }
 
-    button:disabled {
-      background-color: #9ccc9c;
-      cursor: not-allowed;
-    }
+    button:hover { background-color: #0056b3; }
 
     .result {
-      margin-top: 20px;
-      font-size: 18px;
+      margin-top: 25px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      padding: 10px;
+      border-radius: 6px;
     }
 
-    .error {
-      color: red;
-      margin-top: 10px;
-    }
+    .pass { color: #28a745; background-color: #e8f5e9; }
+    .fail { color: #dc3545; background-color: #fbe9e7; }
+    .error { color: #dc3545; font-size: 0.9rem; margin-top: 10px; }
   </style>
 </head>
 <body>
+
   <div class="container">
     <h1>Student Performance Predictor</h1>
-    <input type="number" id="study_hours" placeholder="Study Hours" required>
-    <input type="number" id="attendance" placeholder="Attendance (%)" required>
-    <button onclick="predict()">Predict</button>
+    
+    <label for="model_choice">Choose Model:</label>
+    <select id="model_choice">
+        <option value="logistic">Logistic Regression</option>
+        <option value="tree">Decision Tree</option>
+    </select>
 
-    <div class="result" id="result"></div>
+    <label for="study_hours">Study Hours:</label>
+    <input type="number" id="study_hours" placeholder="e.g. 5" required>
+
+    <label for="attendance">Attendance (%):</label>
+    <input type="number" id="attendance" placeholder="e.g. 85" required>
+
+    <button onclick="predict()">Get Prediction</button>
+
+    <div id="result_container"></div>
     <div class="error" id="error"></div>
   </div>
+
 <script>
 async function predict() {
   const studyHours = document.getElementById("study_hours").value;
   const attendance = document.getElementById("attendance").value;
-  const resultDiv = document.getElementById("result");
+  const modelChoice = document.getElementById("model_choice").value;
+  const resultContainer = document.getElementById("result_container");
   const errorDiv = document.getElementById("error");
 
-  resultDiv.innerHTML = "";
+  // Reset UI
+  resultContainer.innerHTML = "";
   errorDiv.innerHTML = "";
 
   if (!studyHours || !attendance) {
-    errorDiv.innerHTML = "Please enter both values.";
+    errorDiv.innerHTML = "Please fill in all fields.";
     return;
   }
 
   try {
-  const response = await fetch(
-  "https://ml-fastapi-backend-3.onrender.com/predict/logistic",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      study_hours: Number(studyHours),
-      attendance: Number(attendance)
-    })
-  }
-);
+    // Dynamically uses /predict/logistic or /predict/tree
+    const response = await fetch(
+      `https://ml-fastapi-backend-3.onrender.com/predict/${modelChoice}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          study_hours: Number(studyHours),
+          attendance: Number(attendance)
+        })
+      }
+    );
 
-
-    if (!response.ok) {
-      throw new Error("Failed to get prediction from backend");
-    }
+    if (!response.ok) throw new Error("Server Error");
 
     const data = await response.json();
+    const statusClass = data.prediction === 1 ? "pass" : "fail";
+    const statusText = data.prediction === 1 ? "PASS" : "FAIL";
 
-    resultDiv.innerHTML =
-      data.prediction === 1
-        ? "Prediction: Student will pass ✅"
-        : "Prediction: Student will fail ❌";
+    resultContainer.innerHTML = `
+      <div class="result ${statusClass}">
+        ${modelChoice.toUpperCase()} Prediction: ${statusText}
+      </div>`;
 
   } catch (err) {
-    errorDiv.innerHTML = err.message;
+    errorDiv.innerHTML = "Cannot connect to the API. Make sure the backend is awake!";
   }
 }
 </script>
-
-
-
 </body>
 </html>
